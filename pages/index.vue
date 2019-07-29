@@ -1,35 +1,92 @@
 <template>
   <div class="container">
     <div>
-      <logo />
       <h1 class="title">
         rxfire-playground
       </h1>
       <h2 class="subtitle">
         My stunning Nuxt.js project
       </h2>
-      <div class="links">
-        <a href="https://nuxtjs.org/" target="_blank" class="button--green">
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          class="button--grey"
+      <div class="m-4 flex flex-wrap justify-start">
+        <input
+          v-model="user.profile.familyname"
+          class="border-2 border-gray-500 rounded-sm mx-auto mb-4"
+          type="text"
+        />
+        <input
+          v-model="user.profile.firstname"
+          class="border-2 border-gray-500 rounded-sm mx-auto mb-4"
+          type="text"
+        />
+        <input
+          v-model="user.profile.phone"
+          class="border-2 border-gray-500 rounded-sm mx-auto mb-4"
+          type="text"
+        />
+        <input
+          v-model="user.profile.email"
+          class="border-2 border-gray-500 rounded-sm mx-auto mb-4"
+          type="text"
+        />
+      </div>
+      <div>
+        <button
+          class="px-4 py-2 rounded-lg text-blue-700 hover:text-yellow-100 bg-yellow-400 hover:bg-blue-500"
+          @click="save"
         >
-          GitHub
-        </a>
+          SAVE
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
+// import { tap } from 'rxjs/operators'
+// import { collectionData } from 'rxfire/firestore'
+import { authState } from 'rxfire/auth'
+import firebase from '@/plugins/firebase'
+import signInAnonymously from '@/plugins/signInAnonymously'
 
 export default {
-  components: {
-    Logo
+  data() {
+    return {
+      uid: null,
+      user: {
+        profile: {
+          familyname: '',
+          firstname: '',
+          phone: '',
+          email: ''
+        }
+      }
+    }
+  },
+  mounted() {
+    signInAnonymously()
+    const auth = firebase.auth()
+    authState(auth).subscribe((user) => {
+      this.uid = user.uid
+    })
+  },
+  methods: {
+    save() {
+      firebase
+        .firestore()
+        .collection('users')
+        .doc(this.uid)
+        .set(this.user, { merge: true })
+        .then(
+          () => {
+            // eslint-disable-next-line no-console
+            console.log('Document successfully written')
+          },
+          (error) => {
+            // eslint-disable-next-line no-console
+            console.error('Error adding document: ', error)
+          }
+        )
+    }
   }
 }
 </script>
